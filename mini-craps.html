@@ -43,6 +43,7 @@
 
   <py-script>
 from js import document
+from pyodide.ffi import create_proxy  # <-- wrap python functions as JS callbacks
 import random
 
 out = document.getElementById("out")
@@ -119,8 +120,13 @@ def on_quit(evt=None):
     write("Thanks for playing!")
     end_game()
 
-roll_btn.addEventListener("click", on_roll)
-quit_btn.addEventListener("click", on_quit)
+# ✅ Create proxies and keep references so they aren't garbage-collected
+roll_cb = create_proxy(on_roll)
+quit_cb = create_proxy(on_quit)
+
+# ✅ Attach event listeners with proxies
+roll_btn.addEventListener("click", roll_cb)
+quit_btn.addEventListener("click", quit_cb)
 
 set_rounds()
 write("PyScript ready. Click ROLL to begin, or QUIT to leave the table.")
