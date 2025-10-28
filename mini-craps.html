@@ -1,26 +1,23 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Mini-Craps (PyScript)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- External Stylesheet -->
+  <!-- External stylesheet -->
+  <link rel="stylesheet" href="mini-craps.css">
+
+  <!-- Pinned PyScript version (stable) -->
   <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/pyscript.css" />
   <script defer src="https://pyscript.net/releases/2024.6.1/pyscript.js"></script>
-
-
-
-
-  <!-- PyScript -->
-  <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
-  <script defer src="https://pyscript.net/latest/pyscript.js"></script>
 </head>
+
 <body>
   <div class="wrap">
     <h1>Mini-Craps</h1>
     <div class="rules">
-      <div>Step right up, gentlemen - Mini-Craps awaits. Fortune favours the bold!</div>
+      <div>Step right up, gentlemen — Mini-Craps awaits. Fortune favours the bold!</div>
       <div>Type ROLL to play, or QUIT to leave the table.</div>
       <div>Rules: 7 or 11 = win, 2/3/12 = lose, 4/5/6/8/9/10 = keep rolling.</div>
     </div>
@@ -43,20 +40,20 @@
     </div>
   </div>
 
+  <!-- PyScript logic -->
   <py-script>
 from pyscript import when, document
 import random
 
-# --- Element references ---
+# ---- Elements ----
 out = document.getElementById("output")
 dice_el = document.getElementById("dice")
 total_el = document.getElementById("total")
 rounds_el = document.getElementById("rounds")
 btn_retry = document.getElementById("retryBtn")
 btn_roll = document.getElementById("rollBtn")
-btn_quit = document.getElementById("quitBtn")
 
-# --- Game state ---
+# ---- Game state ----
 rounds = 0
 game_over = False
 
@@ -96,7 +93,6 @@ def on_roll(event):
     d1 = random.randint(1, 6)
     d2 = random.randint(1, 6)
     total = d1 + d2
-
     show_roll(d1, d2, total)
 
     if total in (7, 11):
@@ -113,7 +109,6 @@ def on_roll(event):
         show_loss()
         return
 
-    # Neutral rolls
     if total == 10:
         show_message("A fine 10, sir - the point is set. Let's see if fortune favors your hand.")
     elif total == 6 and d1 == d2:
