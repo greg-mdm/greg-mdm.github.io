@@ -5,18 +5,18 @@
   <title>Mini-Craps (PyScript)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- External stylesheet -->
+  <!-- External stylesheet (royal purple / black / silver) -->
   <link rel="stylesheet" href="mini-craps.css">
 
-  <!-- Pinned PyScript version (stable). DO NOT change to 'latest'. -->
-  <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/pyscript.css" />
-  <script defer src="https://pyscript.net/releases/2024.6.1/pyscript.js"></script>
+  <!-- Pinned PyScript core build (use core.css/core.js; type=module) -->
+  <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/core.css" />
+  <script type="module" src="https://pyscript.net/releases/2024.6.1/core.js"></script>
 
-  <!-- Tiny diagnostic: if you open DevTools, you should see this log after load -->
+  <!-- Optional tiny diagnostic -->
   <script>
     window.addEventListener('load', () => {
-      if (window.pyscript) console.log('PyScript loaded OK');
-      else console.warn('PyScript NOT loaded — if you see Python printed below, refresh or check blockers.');
+      const ok = !!customElements.get('py-script');
+      console.log(ok ? 'PyScript custom element registered' : 'PyScript not registered — check network blockers or refresh (Ctrl/Cmd+Shift+R).');
     });
   </script>
 </head>
@@ -103,6 +103,7 @@ def on_roll(event):
     total = d1 + d2
     show_roll(d1, d2, total)
 
+    # Win
     if total in (7, 11):
         if total == 7:
             show_message("Seven - lucky roll, shooter! The house salutes your win.")
@@ -113,10 +114,12 @@ def on_roll(event):
         btn_retry.style.display = "none"
         return
 
+    # Lose
     if total in (2, 3, 12):
         show_loss()
         return
 
+    # Neutral
     if total == 10:
         show_message("A fine 10, sir - the point is set. Let's see if fortune favors your hand.")
     elif total == 6 and d1 == d2:
