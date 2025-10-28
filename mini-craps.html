@@ -8,9 +8,17 @@
   <!-- External stylesheet -->
   <link rel="stylesheet" href="mini-craps.css">
 
-  <!-- Pinned PyScript version (stable) -->
+  <!-- Pinned PyScript version (stable). DO NOT change to 'latest'. -->
   <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/pyscript.css" />
   <script defer src="https://pyscript.net/releases/2024.6.1/pyscript.js"></script>
+
+  <!-- Tiny diagnostic: if you open DevTools, you should see this log after load -->
+  <script>
+    window.addEventListener('load', () => {
+      if (window.pyscript) console.log('PyScript loaded OK');
+      else console.warn('PyScript NOT loaded — if you see Python printed below, refresh or check blockers.');
+    });
+  </script>
 </head>
 
 <body>
