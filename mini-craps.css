@@ -1,132 +1,82 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mini-Craps (PyScript)</title>
+/* ===== Mini-Craps — Royal Purple, Black, Silver ===== */
+:root{
+  --purple-dark:#240046;   /* deep midnight purple */
+  --purple:#5A189A;        /* royal purple accent */
+  --black:#0B0B0C;         /* onyx base */
+  --silver:#C0C0C0;        /* silver text/lines */
+  --ink:#F5F5F5;           /* soft white copy */
+}
 
-  <!-- Pin a stable PyScript release -->
-  <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/core.css" />
-  <script type="module" src="https://pyscript.net/releases/2024.6.1/core.js"></script>
+/* Base */
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color:var(--ink);
+  background:linear-gradient(180deg,var(--black) 0%, var(--purple-dark) 100%);
+}
 
-  <py-config>
-    packages = []
-  </py-config>
+/* Layout wrapper */
+.wrap{
+  max-width:860px;
+  margin:40px auto;
+  padding:28px;
+  background:rgba(0,0,0,.60);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  box-shadow:0 0 30px rgba(90,24,154,.25);
+}
 
-  <!-- Your dedicated stylesheet (keeps other site’s style.css untouched) -->
-  <link rel="stylesheet" href="mini-craps.css" />
-</head>
-<body>
-  <div class="wrap">
-    <h1>Mini-Craps</h1>
-    <div class="rules">
-      <div>Step right up, gentlemen — Mini-Craps awaits. Fortune favours the bold!</div>
-      <div>Click ROLL to play, or QUIT to leave the table.</div>
-      <div>Rules: 7 or 11 = win, 2/3/12 = lose, 4/5/6/8/9/10 = keep rolling.</div>
-    </div>
+/* Headings & rules */
+h1{
+  margin:0 0 .4rem;
+  font-weight:700;
+  color:var(--silver);
+  text-shadow:0 0 10px rgba(192,192,192,.30);
+}
+.rules{
+  color:var(--silver);
+  font-size:.95rem;
+  line-height:1.45;
+}
 
-    <div class="panel">
-      <pre id="out" class="msg">PyScript ready. Click ROLL to begin, or QUIT to leave the table.</pre>
-      <div id="rounds" class="dim">Total rounds played: 0</div>
-    </div>
+/* Message panel */
+.panel,.box{
+  margin-top:18px;
+  padding:16px;
+  background:var(--black);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:12px;
+  box-shadow:inset 0 0 20px rgba(90,24,154,.30);
+}
+.msg{min-height:60px; font-size:1.05rem}
+.dim{opacity:.8}
+.dice,.total{font-weight:600; color:var(--silver)}
 
-    <div class="btns">
-      <button id="rollBtn" class="roll">ROLL</button>
-      <button id="quitBtn" class="quit">QUIT</button>
-    </div>
-  </div>
+/* Buttons */
+.btns{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px}
+button{
+  padding:10px 18px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.15);
+  background:var(--purple-dark);
+  color:var(--ink);
+  font-weight:600;
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .2s ease, opacity .2s;
+}
+button:hover{transform:translateY(-1px); box-shadow:0 0 10px rgba(192,192,192,.25)}
+button:disabled{opacity:.6; cursor:not-allowed}
 
-  <py-script>
-from js import document
-from pyodide.ffi import create_proxy
-import random
+/* Semantic button variants used by your HTML */
+.roll{ background:var(--purple); color:var(--ink) }
+.quit{ background:linear-gradient(180deg,#1a1a1a 0%, #000 100%); color:var(--silver) }
+.retry{ background:var(--purple-dark); color:var(--ink) }
 
-# --- DOM refs ---
-out = document.getElementById("out")
-rounds_el = document.getElementById("rounds")
-roll_btn = document.getElementById("rollBtn")
-quit_btn = document.getElementById("quitBtn")
-
-# --- game state ---
-rounds = 0
-game_over = False
-
-def write(msg):
-    out.textContent += ("\n" + msg)
-
-def set_rounds():
-    rounds_el.textContent = f"Total rounds played: {rounds}"
-
-def end_game(extra=None):
-    global game_over
-    game_over = True
-    if extra:
-        write(extra)
-    roll_btn.disabled = True
-    set_rounds()
-
-def on_roll(evt=None):
-    global rounds, game_over
-    if game_over:
-        return
-
-    rounds += 1
-    d1 = random.randint(1, 6)
-    d2 = random.randint(1, 6)
-    total = d1 + d2
-
-    write("----------------------------")
-    write(f"You rolled: {d1} and {d2} - total {total}")
-
-    # Win
-    if total == 7:
-        write("Seven - lucky roll, shooter! The house salutes your win.")
-        if rounds == 3: write("Three rounds complete — thanks for playing!")
-        end_game(); return
-    if total == 11:
-        write("Eleven - a natural! Fine roll, shooter, that's a win!")
-        if rounds == 3: write("Three rounds complete — thanks for playing!")
-        end_game(); return
-
-    # Lose
-    if total in (2, 3, 12):
-        loss_lines = [
-            "Craps! Unlucky roll, sir - perhaps next time fortune will turn.",
-            "Craps! Misfortune this round, shooter - the house claims the win.",
-            "Craps! A gentleman's loss - better luck on the next throw."
-        ]
-        write(random.choice(loss_lines))
-        if rounds == 3:
-            write("Three rounds complete — thanks for playing!"); end_game(); return
-        write("Would you like to ROLL again or QUIT?")
-        set_rounds(); return
-
-    # Neutral
-    if total == 10:
-        write("A fine 10, sir - the point is set. Let's see if fortune favors your hand.")
-    elif total == 6 and d1 == d2:
-        write("Point is six - shooter keeps the dice. Keep rolling!")
-    else:
-        write("Neutral roll - you're still in play, keep rolling!")
-    write("----------------------------")
-
-    if rounds == 3:
-        write("Three rounds complete — thanks for playing!"); end_game(); return
-
-    set_rounds()
-
-def on_quit(evt=None):
-    write("Thanks for playing!")
-    end_game()
-
-# ✅ Bind JS events via proxies (reliable across PyScript versions)
-roll_cb = create_proxy(on_roll)
-quit_cb = create_proxy(on_quit)
-roll_btn.addEventListener("click", roll_cb)
-quit_btn.addEventListener("click", quit_cb)
-
-# initial UI
-set_rounds()
-  </py-script>
-</body>
-</html>
+/* Footer / small text */
+.footer{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-top:20px; color:var(--silver); font-size:.9rem;
+}
+.footer a{ color:var(--silver); text-decoration:none }
+.footer a:hover{ text-decoration:underline }
