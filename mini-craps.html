@@ -5,9 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mini-Craps (PyScript)</title>
 
-  <!-- ✅ Use a fixed PyScript release instead of "latest" -->
+  <!-- Pinned stable PyScript release -->
   <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/core.css" />
   <script type="module" src="https://pyscript.net/releases/2024.6.1/core.js"></script>
+
+  <py-config>
+    packages = []
+  </py-config>
 
   <style>
     body{font-family:system-ui,Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.5}
@@ -37,8 +41,7 @@
     <div id="rounds" style="margin-top:8px;color:#555;"></div>
   </div>
 
-  <!-- ✅ Explicitly tell browser this is Python code -->
-  <script type="text/python">
+  <py-script>
 from js import document
 import random
 
@@ -77,21 +80,17 @@ def on_roll(evt=None):
     write("\n----------------------------")
     write(f"You rolled: {d1} and {d2} - total {total}")
 
-    # Win: 7 or 11
     if total == 7:
         write("Seven - lucky roll, shooter! The house salutes your win.")
         if rounds == 3:
             write("Three rounds complete — thanks for playing!")
-        end_game()
-        return
+        end_game(); return
     elif total == 11:
         write("Eleven - a natural! Fine roll, shooter, that's a win!")
         if rounds == 3:
             write("Three rounds complete — thanks for playing!")
-        end_game()
-        return
+        end_game(); return
 
-    # Lose: 2, 3, 12
     if total in (2, 3, 12):
         loss_lines = [
             "Craps! Unlucky roll, sir - perhaps next time fortune will turn.",
@@ -100,14 +99,9 @@ def on_roll(evt=None):
         ]
         write(random.choice(loss_lines))
         if rounds == 3:
-            write("Three rounds complete — thanks for playing!")
-            end_game()
-            return
-        write("Would you like to ROLL again or QUIT?")
-        set_rounds()
-        return
+            write("Three rounds complete — thanks for playing!"); end_game(); return
+        write("Would you like to ROLL again or QUIT?"); set_rounds(); return
 
-    # Neutral totals
     if total == 10:
         write("A fine 10, sir - the point is set. Let's see if fortune favors your hand.")
     elif total == 6 and d1 == d2:
@@ -117,9 +111,7 @@ def on_roll(evt=None):
     write("----------------------------")
 
     if rounds == 3:
-        write("Three rounds complete — thanks for playing!")
-        end_game()
-        return
+        write("Three rounds complete — thanks for playing!"); end_game(); return
 
     set_rounds()
 
@@ -131,7 +123,7 @@ roll_btn.addEventListener("click", on_roll)
 quit_btn.addEventListener("click", on_quit)
 
 set_rounds()
-write("Click ROLL to begin, or QUIT to leave the table.")
-  </script>
+write("PyScript ready. Click ROLL to begin, or QUIT to leave the table.")
+  </py-script>
 </body>
 </html>
