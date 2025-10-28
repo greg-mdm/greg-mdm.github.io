@@ -13,7 +13,7 @@
     packages = []
   </py-config>
 
-  <!-- Keep your dedicated stylesheet (doesn't affect button logic) -->
+  <!-- Dedicated stylesheet for this page -->
   <link rel="stylesheet" href="mini-craps.css" />
 </head>
 <body>
@@ -31,24 +31,28 @@
     </div>
 
     <div class="btns">
-      <!-- ✅ Declarative bindings: simplest & reliable -->
-      <button id="rollBtn" class="roll" py-click="on_roll">ROLL</button>
-      <button id="quitBtn" class="quit" py-click="on_quit">QUIT</button>
-
+      <button id="rollBtn" class="roll">ROLL</button>
+      <button id="quitBtn" class="quit">QUIT</button>
     </div>
   </div>
 
   <py-script>
 from js import document
+from pyodide.ffi import create_proxy
 import random
 
+# --- DOM refs ---
 out = document.getElementById("out")
 rounds_el = document.getElementById("rounds")
+roll_btn = document.getElementById("rollBtn")
+quit_btn = document.getElementById("quitBtn")
+
+# --- game state ---
 rounds = 0
 game_over = False
 
-def write(msg):
-    out.textContent += ("\n" + msg)
+def write(msg: str):
+    out.textContent += "\n" + msg
 
 def set_rounds():
     rounds_el.textContent = f"Total rounds played: {rounds}"
@@ -58,10 +62,10 @@ def end_game(extra=None):
     game_over = True
     if extra:
         write(extra)
-    document.getElementById("rollBtn").disabled = True
+    roll_btn.disabled = True
     set_rounds()
 
-def on_roll():
+def on_roll(evt=None):
     global rounds, game_over
     if game_over:
         return
@@ -74,15 +78,19 @@ def on_roll():
     write("----------------------------")
     write(f"You rolled: {d1} and {d2} - total {total}")
 
+    # Win: 7 or 11
     if total == 7:
         write("Seven - lucky roll, shooter! The house salutes your win.")
-        if rounds == 3: write("Three rounds complete — thanks for playing!")
+        if rounds == 3:
+            write("Three rounds complete — thanks for playing!")
         end_game(); return
     elif total == 11:
         write("Eleven - a natural! Fine roll, shooter, that's a win!")
-        if rounds == 3: write("Three rounds complete — thanks for playing!")
+        if rounds == 3:
+            write("Three rounds complete — thanks for playing!")
         end_game(); return
 
+    # Lose: 2, 3, 12
     if total in (2, 3, 12):
         loss_lines = [
             "Craps! Unlucky roll, sir - perhaps next time fortune will turn.",
@@ -91,9 +99,12 @@ def on_roll():
         ]
         write(random.choice(loss_lines))
         if rounds == 3:
-            write("Three rounds complete — thanks for playing!"); end_game(); return
-        write("Would you like to ROLL again or QUIT?"); set_rounds(); return
+            write("Three rounds complete — thanks for playing!")
+            end_game(); return
+        write("Would you like to ROLL again or QUIT?")
+        set_rounds(); return
 
+    # Neutral totals
     if total == 10:
         write("A fine 10, sir - the point is set. Let's see if fortune favors your hand.")
     elif total == 6 and d1 == d2:
@@ -103,13 +114,20 @@ def on_roll():
     write("----------------------------")
 
     if rounds == 3:
-        write("Three rounds complete — thanks for playing!"); end_game(); return
+        write("Three rounds complete — thanks for playing!")
+        end_game(); return
 
     set_rounds()
 
-def on_quit():
+def on_quit(evt=None):
     write("Thanks for playing!")
     end_game()
+
+# --- Bind events via proxies (reliable across releases) ---
+roll_cb = create_proxy(on_roll)
+quit_cb = create_proxy(on_quit)
+roll_btn.addEventListener("click", roll_cb)
+quit_btn.addEventListener("click", quit_cb)
 
 # initial UI
 set_rounds()
