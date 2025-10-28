@@ -1,150 +1,126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Mini-Craps (PyScript)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- External stylesheet (royal purple / black / silver) -->
-  <link rel="stylesheet" href="mini-craps.css">
-
-  <!-- Pinned PyScript core build (use core.css/core.js; type=module) -->
+  <!-- Pinned PyScript release -->
   <link rel="stylesheet" href="https://pyscript.net/releases/2024.6.1/core.css" />
   <script type="module" src="https://pyscript.net/releases/2024.6.1/core.js"></script>
 
-  <!-- Optional tiny diagnostic -->
-  <script>
-    window.addEventListener('load', () => {
-      const ok = !!customElements.get('py-script');
-      console.log(ok ? 'PyScript custom element registered' : 'PyScript not registered — check network blockers or refresh (Ctrl/Cmd+Shift+R).');
-    });
-  </script>
-</head>
+  <py-config>
+    packages = []
+  </py-config>
 
+  <!-- Page-specific stylesheet (keeps other site CSS untouched) -->
+  <link rel="stylesheet" href="mini-craps.css" />
+</head>
 <body>
   <div class="wrap">
     <h1>Mini-Craps</h1>
     <div class="rules">
       <div>Step right up, gentlemen — Mini-Craps awaits. Fortune favours the bold!</div>
-      <div>Type ROLL to play, or QUIT to leave the table.</div>
+      <div>Click ROLL to play, or QUIT to leave the table.</div>
       <div>Rules: 7 or 11 = win, 2/3/12 = lose, 4/5/6/8/9/10 = keep rolling.</div>
     </div>
 
-    <div class="box">
-      <div id="output" class="msg">Press ROLL to begin.</div>
-      <div id="dice" class="dice"></div>
-      <div id="total" class="total"></div>
+    <div class="panel">
+      <pre id="out" class="msg">PyScript ready. Click ROLL to begin, or QUIT to leave the table.</pre>
+      <div id="rounds" class="dim">Total rounds played: 0</div>
     </div>
 
     <div class="btns">
-      <button id="rollBtn" py-click="on_roll" class="roll">ROLL</button>
-      <button id="quitBtn" py-click="on_quit" class="quit">QUIT</button>
-      <button id="retryBtn" py-click="on_retry" class="retry" style="display:none">ROLL AGAIN</button>
-    </div>
-
-    <div class="footer">
-      <div id="rounds">Total rounds played: 0</div>
-      <a href="#" target="_blank" rel="noopener">🎲 Play Live Game</a>
+      <button id="rollBtn" class="roll">ROLL</button>
+      <button id="quitBtn" class="quit">QUIT</button>
     </div>
   </div>
 
-  <!-- PyScript logic -->
   <py-script>
-from pyscript import when, document
+from js import document
+from pyodide.ffi import create_proxy
 import random
 
-# ---- Elements ----
-out = document.getElementById("output")
-dice_el = document.getElementById("dice")
-total_el = document.getElementById("total")
+# --- DOM refs ---
+out = document.getElementById("out")
 rounds_el = document.getElementById("rounds")
-btn_retry = document.getElementById("retryBtn")
-btn_roll = document.getElementById("rollBtn")
+roll_btn = document.getElementById("rollBtn")
+quit_btn = document.getElementById("quitBtn")
 
-# ---- Game state ----
+# --- game state ---
 rounds = 0
 game_over = False
 
-def reset_ui():
-    btn_roll.disabled = False
-    btn_retry.style.display = "none"
-    out.textContent = "Press ROLL to begin."
-    dice_el.textContent = ""
-    total_el.textContent = ""
-    rounds_el.textContent = "Total rounds played: 0"
+def write(msg: str):
+    out.textContent += "\n" + msg
 
-reset_ui()
-
-def show_roll(d1, d2, total):
-    dice_el.textContent = f"You rolled: {d1} and {d2} - total {total}"
+def set_rounds():
     rounds_el.textContent = f"Total rounds played: {rounds}"
 
-def show_message(msg):
-    out.textContent = msg
+def end_game(extra=None):
+    """Freeze the UI and finish."""
+    global game_over
+    game_over = True
+    if extra:
+        write(extra)
+    roll_btn.disabled = True
+    set_rounds()
 
-def show_loss():
-    lines = [
-        "Craps! Unlucky roll, sir - perhaps next time fortune will turn.",
-        "Craps! Misfortune this round, shooter - the house claims the win.",
-        "Craps! A gentleman's loss - better luck on the next throw."
-    ]
-    show_message(random.choice(lines))
-    btn_retry.style.display = "inline-block"
-    btn_roll.disabled = True
-
-@when("click", "#rollBtn")
-def on_roll(event):
+def on_roll(evt=None):
+    """One throw. End immediately on win/lose; otherwise continue."""
     global rounds, game_over
     if game_over:
         return
+
     rounds += 1
     d1 = random.randint(1, 6)
     d2 = random.randint(1, 6)
     total = d1 + d2
-    show_roll(d1, d2, total)
 
-    # Win
-    if total in (7, 11):
-        if total == 7:
-            show_message("Seven - lucky roll, shooter! The house salutes your win.")
-        else:
-            show_message("Eleven - a natural! Fine roll, shooter, that's a win!")
-        game_over = True
-        btn_roll.disabled = True
-        btn_retry.style.display = "none"
-        return
+    write("----------------------------")
+    write(f"You rolled: {d1} and {d2} - total {total}")
 
-    # Lose
+    # Win: 7 or 11 -> end immediately
+    if total == 7:
+        write("Seven - lucky roll, shooter! The house salutes your win.")
+        end_game(); return
+    if total == 11:
+        write("Eleven - a natural! Fine roll, shooter, that's a win!")
+        end_game(); return
+
+    # Lose: 2, 3, 12 -> end immediately
     if total in (2, 3, 12):
-        show_loss()
-        return
+        loss_lines = [
+            "Craps! Unlucky roll, sir - perhaps next time fortune will turn.",
+            "Craps! Misfortune this round, shooter - the house claims the win.",
+            "Craps! A gentleman's loss - better luck on the next throw."
+        ]
+        write(random.choice(loss_lines))
+        end_game(); return
 
-    # Neutral
+    # Neutral totals: stay in play
     if total == 10:
-        show_message("A fine 10, sir - the point is set. Let's see if fortune favors your hand.")
+        write("A fine 10, sir - the point is set. Let's see if fortune favors your hand.")
     elif total == 6 and d1 == d2:
-        show_message("Point is six - shooter keeps the dice. Keep rolling!")
+        write("Point is six - shooter keeps the dice. Keep rolling!")
     else:
-        show_message("Neutral roll - you're still in play, keep rolling!")
-    btn_retry.style.display = "none"
+        write("Neutral roll - you're still in play, keep rolling!")
 
-@when("click", "#retryBtn")
-def on_retry(event):
-    global game_over
-    game_over = False
-    btn_roll.disabled = False
-    btn_retry.style.display = "none"
-    show_message("Press ROLL to begin.")
-    dice_el.textContent = ""
-    total_el.textContent = ""
+    # still playing
+    set_rounds()
 
-@when("click", "#quitBtn")
-def on_quit(event):
-    global game_over
-    show_message("Thanks for playing!")
-    game_over = True
-    btn_roll.disabled = True
-    btn_retry.style.display = "none"
+def on_quit(evt=None):
+    write("Thanks for playing!")
+    end_game()
+
+# Bind events via proxies (reliable across releases)
+roll_cb = create_proxy(on_roll)
+quit_cb = create_proxy(on_quit)
+roll_btn.addEventListener("click", roll_cb)
+quit_btn.addEventListener("click", quit_cb)
+
+# initial UI
+set_rounds()
   </py-script>
 </body>
 </html>
