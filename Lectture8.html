@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Harry Potter Quiz</title>
+  <style>
+    li {
+      list-style-type: none;
+      padding: 8px;
+      margin: 5px 0;
+      border: 1px solid #ccc;
+      width: 200px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to the Harry Potter Quiz!</h1>
+  <p>Welcome Muggle! Which year was the first Harry Potter Book released?</p>
+  <ul>
+    <li id="ans1">1997</li>
+    <li id="ans2">1999</li>
+    <li id="ans3">2003</li>
+  </ul>
+  <p id="ansbox">Correct answer will be shown here</p>
+
+  <script>
+    // Get elements
+    const ans1 = document.querySelector("#ans1");
+    const ans2 = document.querySelector("#ans2");
+    const ans3 = document.querySelector("#ans3");
+    const ansbox = document.querySelector("#ansbox");
+
+    // Add event listeners
+    ans1.addEventListener("click", checkAnswer);
+    ans2.addEventListener("click", checkAnswer);
+    ans3.addEventListener("click", checkAnswer);
+
+    // Function to check the clicked answer
+    function checkAnswer() {
+      // Reset all options
+      ans1.style.backgroundColor = "";
+      ans2.style.backgroundColor = "";
+      ans3.style.backgroundColor = "";
+
+      if (this.id === "ans1") {
+        this.style.backgroundColor = "green";
+        ansbox.textContent = "Correct! The first book was released in 1997.";
+      } else {
+        this.style.backgroundColor = "red";
+        ansbox.textContent = "Wrong answer! Try again.";
+      }
+    }
+  </script>
+</body>
+</html>
